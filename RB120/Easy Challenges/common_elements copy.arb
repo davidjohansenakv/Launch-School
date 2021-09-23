@@ -1,0 +1,141 @@
+# Given an array of n positive integers and a positive integer s, find the minimal length of a contiguous subarray of which the sum ≥ s. If there isn't one, return 0 instead.
+
+# input - an array of n positive integers (n elements)
+# input - a positive integer s
+
+# return the length or size of a contiguous subarray for whence the sum of the elements of it are bigger >= s. 
+
+# explicit requirements
+# - the size of the array must be a subarray of the input array
+# - all elements are positive
+# - if there is no minimal length, return 0 
+
+# High Level Algorithm
+# initial size of subarray set to 0 
+# find all subarrays 
+## loop from index 0 to last index 
+## loop from current index to last index 
+
+def minSubLength(arr, sum)
+    size = arr.size 
+    0.upto(arr.size - 1) do |cidx| 
+        cidx.upto(arr.size - 1) do |yidx|
+            current_size = arr[cidx..yidx].size 
+            current_sum = arr[cidx..yidx].sum
+            size = current_size if (current_sum >= sum && current_size < size) 
+        end
+    end
+    size < arr.size ? size : 0 
+end 
+
+# save length of sub array if the sum of its parts is >= s and its size is < than the size of the currently saved size 
+# finally size of subarray 
+
+# p minSubLength([2,3,1,2,4,3], 7) == 2
+# p minSubLength([1, 10, 5, 2, 7], 9) == 1 
+# p minSubLength([1, 11, 100, 1, 0, 200, 3, 2, 1, 250], 280) == 4
+# p minSubLength([1, 2, 4], 8) == 0
+
+# problem 2
+# Divisors of 42 are : 1, 2, 3, 6, 7, 14, 21, 42. These divisors squared are: 1, 4, 9, 36, 49, 196, 441, 1764. 
+# The sum of the squared divisors is 2500 which is 50 * 50, a square!
+
+# Given two positive integers we want to find all integers between them whose sum of squared divisors is itself a square. 42 is such a number.
+
+# The result will be an array of arrays, each subarray having two elements, 
+# first the number whose squared divisors is a square and then the sum of the squared divisors.
+
+# input - two integers 
+# return an array of arrays
+
+# Explicit requirements
+# arrays will have two elements - a number whose sum of squared divisors is a square, and the sum itself
+
+# Implicit Requirements
+# The two numbers provided as arguments are included in the search
+
+# High Level Algorithm 
+# Find all divisors of each number in a range
+## create an array to hold divisors
+## go over a range from 1 to and including current number
+## add number as divisor if number / by range number is equal to 0  '%' operator  
+## square the divisor and add it to a sum 
+# Check if the sum if a square by see if you get an integer when you raise it to the power of 0.5 
+
+# if yes, add number and sum to an array
+
+# Pseudo Code
+## initialize our return array of arrays 
+
+def list_squared(num1, num2) 
+    squared_list = []
+    (num1..num2).to_a.each do |num|
+        sum = 0 
+        1.upto(num) do |divisor| 
+            sum += divisor**2 if num % divisor == 0
+        end
+        squared_sum = (sum.to_f)**(0.5) 
+        if squared_sum.to_i == sum**(0.5) 
+            squared_list << [num, sum]
+        end
+    end
+    squared_list 
+end 
+
+
+
+# [[1, 1], [42, 2500], [246, 84100]]
+p list_squared(1, 250) 
+p list_squared(42, 250) == [[42, 2500], [246, 84100]]
+p list_squared(250, 500) == [[287, 84100]]
+
+# Problem 3
+# You are given an array which contains only integers (positive and negative). Your job is to sum only the numbers that are the same and consecutive. 
+# The result should be one array.
+
+# You can asume there is never an empty array and there will always be an integer.
+
+# Input - an array of integers
+# return an array of integers, that represent sums of consecutive numbers in the input 
+
+# Explicit assumptions
+# No empty input arrays
+# always an integer 
+
+# Examples
+# [1, 1, 2, 3, 2, 3, 8, 8] => [2, 2, 3, 2, 3, 16]
+
+
+# initialize an array to hold sum values 
+# initialize running sum outside loop
+# initialize element holder outside loop, set to 
+# You want to iterate over a sub-array that excludes the input 0 index array 
+# add each element to a running sum 
+# add each element to "element holder" 
+# then, on the next loop
+# you check if the element is the same as the element holder, if yes, add to the running sum, otherwise
+# add running sum to a return array
+# and start new running sum and new element holder 
+
+def sum_consecutives(array)
+    consecutive_sums = []
+    running_sum = array[0]
+    element_holder = running_sum 
+    array[1..-1].each do |element|
+        if element == element_holder
+            running_sum += element 
+        else
+            consecutive_sums << running_sum
+            running_sum = element
+            element_holder = element 
+        end
+    end
+    consecutive_sums << running_sum 
+    consecutive_sums
+end 
+
+# == [1,12,0,4,6,2]
+
+p sum_consecutives([1,4,4,4,0,4,3,3,1, 1]) 
+p sum_consecutives([1,1,7,7,3]) 
+p sum_consecutives([-5,-5,7,7,12,0]) ==  [-10,14,12,0]

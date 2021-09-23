@@ -1,0 +1,260 @@
+=begin
+1. Write a textual description of the problem
+
+2. Extract the major verbs and nouns
+
+3. Organize and associate the verbs with the nouns
+
+Rock, Paper, Shotgun is a game of two players, one human and one computer
+They choose a move in turn, and their move is compared with the other
+The three possible moves are paper, rock, and scissors.
+
+Major verbs:
+Choose, Compare
+
+Nouns:
+Players, Human, Computer, move, rules, game.
+
+Humans and Computers are Player
+A player can choose a move
+
+A move can be compared
+=end
+
+class Player
+  attr_accessor :move, :name
+  attr_reader :choice_history 
+
+  def initialize
+    @move = nil
+    @choice_history = [] 
+    set_name
+  end
+end
+
+class Human < Player
+  def choose
+    choice = nil
+    loop do
+      puts "Please choose either rock, paper, scissors, spock, or lizard: "
+      choice = gets.chomp
+      break if %w[rock paper scissors lizard spock].include? choice
+      puts "Invalid value."
+    end
+    self.move = map_choice_to_move(choice)
+    @choice_history << move 
+  end
+
+  def map_choice_to_move(choice) 
+    mapper = {'paper' => Paper.new, 'rock' => Rock.new, 'scissors' => Scissors.new,
+      'spock' => Spock.new, 'lizard' => Lizard.new}
+    mapper[choice] 
+  end
+
+  def set_name
+    name = nil
+    loop do
+      puts 'What is your name? '
+      name = gets.chomp
+      break unless name.empty?
+      puts "Please enter a name."
+    end
+    self.name = name
+  end
+end
+
+class Computer < Player 
+  def choose
+    self.move = ([Lizard, Spock, Rock, Paper, Scissors].sample).new
+    @choice_history << move 
+  end
+
+  def set_name
+    self.name = %w(R2D2 C3PO Your_Mum).sample
+  end
+end
+
+class Move
+
+  def to_s
+    @value
+  end
+
+  def scissors?
+    @value == 'scissors'
+  end
+
+  def rock?
+    @value == 'rock'
+  end
+
+  def paper?
+    @value == 'paper'
+  end
+
+  def lizard?
+    @value == 'lizard'
+  end
+
+  def spock?
+    @value == 'spock'
+  end
+
+  def >(other_move)
+    (rock? && (other_move.scissors? || other_move.lizard?)) ||
+      (paper? && (other_move.rock? || other_move.spock?)) ||
+      (scissors? && (other_move.paper? || other_move.lizard?)) ||
+      (lizard? && (other_move.spock? || other_move.paper?)) ||
+      (spock? && (other_move.rock? || other_move.scissors?))
+  end
+end
+
+class Lizard < Move
+  def initialize 
+    @value = 'lizard'
+  end
+end
+
+class Paper < Move
+  def initialize
+    @value = 'paper'
+  end
+end
+
+class Scissors < Move
+  def initialize
+    @value = 'scissors'
+  end
+end
+
+class Rock < Move
+  def initialize
+    @value = 'rock'
+  end
+end
+
+class Spock < Move
+  def initialize
+    @value = 'spock'
+  end
+end
+
+class RPSGame
+  attr_reader :human, :computer 
+  attr_accessor :score
+
+  def initialize
+    @human = Human.new
+    @computer = Computer.new
+    @score = Hash.new(0)
+  end
+
+  def display_welcome_greeting
+    puts "Welcome to 'Rock, Paper, Scissors, Spock, Lizard' #{human.name}!"
+  end
+
+  def increment_score
+    score[who_won] += 1
+  end
+
+  def who_won
+    if human.move > computer.move
+      human
+    elsif computer.move > human.move
+      computer
+    else
+      nil
+    end
+  end
+
+  def display_winner_round
+    winner = who_won
+    case winner 
+    when human then puts "#{human.name} won this round! Congratulations"
+    when computer then puts "#{computer.name} won this round. Too bad :("
+    else puts "It's a tie this round!"
+    end
+  end
+
+  def final_winner? 
+    score.values.max == 10
+  end
+
+  def display_goodbye
+    puts "Thank you for playing Rock, Paper, Scissors, Spock, Lizard. Goodbye!"
+  end
+
+  def display_moves
+    puts "#{human.name} chose #{human.move}"
+    puts "#{computer.name} chose #{computer.move}"
+  end
+
+  def display_score 
+    puts "The current score is #{human.name}: #{score[human]} - #{score[computer]} :#{computer.name}"
+  end
+
+  def display_winner_final
+    winner = score.select { |k, v| v == 10}.keys.first.name 
+    puts "The winner is #{winner} with 10 points against #{score.values.min}!"
+  end
+
+  def play_again?
+    answer = nil
+    loop do
+      puts 'Would you like to play again? (y/n)'
+      answer = gets.chomp
+      break if %w(y n).include? answer.downcase
+      puts "Invalid answer."
+    end
+    answer == 'y'
+  end
+
+  def print_moves? 
+    puts "Would you like a print of all moves by you and the computer? (y/n)"
+    answer = nil
+    loop do 
+      answer = gets.chomp
+      break if %w[y n].include? answer.downcase 
+    end
+    answer.downcase == 'y' 
+  end
+
+  def print_moves 
+    puts "#{human.name} made the following moves: "
+    round = 0
+    human.choice_history.each do |mv|
+      round += 1 
+      puts "In round #{round} the move was: #{mv}"
+    end
+
+    puts 
+
+    puts "#{computer.name} made the following moves: "
+    round = 0
+    computer.choice_history.each do |mv|
+      round += 1 
+      puts "In round #{round} the move was: #{mv}"
+    end
+  end
+
+  def play
+    display_welcome_greeting
+    sleep 2 
+    loop do
+      system("cls")
+      human.choose
+      computer.choose
+      display_moves
+      display_winner_round
+      increment_score
+      display_score
+      break if final_winner?
+      break unless play_again?
+    end
+    display_winner_final if final_winner?
+    display_goodbye
+    print_moves if print_moves?
+  end
+end
+
+RPSGame.new.play

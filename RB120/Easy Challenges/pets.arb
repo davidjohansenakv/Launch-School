@@ -1,0 +1,90 @@
+=begin
+Input: An array (with integer elements n) 
+Output: An integer s
+
+Explicit Requirements:
+- s represents the minimum number of elements to be changed to
+## create an arithmetic progression. 
+- The progression must consist of integer elements
+- Swapping two elements counts as changing both elements 
+-  2 <= arr.length <= 100 
+- -1000 <= arr[i] <= 1000 
+
+Implicit Requirements:
+- The difference between elements can't be a float so 
+steps must be taken to correct for this
+-
+
+Examples and edge cases: 
+1) [1, 3, 0, 7, 9] 
+- difference == 2 
+- final array = [1, 3, 5, 7, 9] 
+- number of changed elements == 1 
+
+Data structure: 
+Use arrays, select and map statements 
+
+High-Level-Algorithm:
+- hard: build a progression for each element in the original array using the difference
+-- select all values in the progression that are equal to the original
+-- map it to size
+- select the minimum size
+
+Detailed Algorithm (Pseudo Code): 
+- Initialize array to hold all sizes of pseudo progressions
+- Initialize an array of arrays to hold all valid differences (arr_arrdiffs)
+- Find frequency of difference
+- Find all possible progression
+
+
+
+
+=end 
+
+# Test cases 
+test_1 = [1, 3, 0, 7, 9] 
+test_2 = [1, 10, 2, 12, 3, 14, 4, 16, 5] 
+
+def valid_differences(array)
+    # returns an array of arrays
+    all_diffs = []
+    (0...(array.size-1)).each do |idx|
+        difference = [] 
+        ((idx + 1)...array.size).each do |ydx|
+            next if (array[ydx] - array[idx]) % (ydx - idx) != 0 
+            difference.push((array[ydx] - array[idx]) / (ydx - idx))
+            all_diffs << difference
+        end
+    end
+    all_diffs
+end
+
+def most_frequent_difference(arr_arrs)
+    arr_arrs.flatten!.max_by { |difference| arr_arrs.count(difference) }
+end 
+
+## This brute force method works, but is very inefficient. 
+def all_progressions(arr, progression_val)
+    progressions = []
+    arr.each_with_index do |value, idx|
+        progression = [value] 
+        (idx - 1).downto(0) { |_| progression.unshift(-1*progression_val + progression[0] ) } unless idx == 0 
+        (idx + 1).upto(arr.size-1) { |_| progression.push(progression_val + progression[-1] ) }
+        progressions << progression 
+    end
+    progressions 
+end 
+
+def fix_progression(arr) 
+    valid_differences = valid_differences(arr) 
+    progression_value = most_frequent_difference(valid_differences)
+    all_progressions = all_progressions(arr, progression_value)
+
+    smallest_differences = all_progressions.map do |progression|
+        progression.select.each_with_index do |value, idx|
+            value != arr[idx] 
+        end.size
+    end.min 
+end 
+
+p fix_progression([-10, -21, -20, -25, -13, 14, 2, 6, -50, -55, -60, -65, -70, -75, -80, -85, -90, -95, -100, -105, -110, -115, -120, -125, -130, 12, -24, -15, -150, 7, -160, -165, -170, -175, -180, -185, -190, -195, -200, -3, -6, -215, -220, -225, -230, -235, -240, -20, -250, -255, -260, 23, -270, -275, -280, -7, -290, -295, -300, 12, -310, -315, -320, -325, -330, -335, -17, -345, -350, -355, -360, -365, -370, -375, -2, -385, -390, -395, 2, -405, -11, -415, -420, -425, -430, -435, -440, 20, -450, -455, -460, -465, -470, -475, -480, -485, 15, -22, -500, -21])

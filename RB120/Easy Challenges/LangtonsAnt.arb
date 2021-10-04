@@ -1,0 +1,147 @@
+=begin
+# Langtons Ant
+
+# You must create a grid of squares
+# input 
+- a grid (an array of arrays) representing the current board
+- the ants current column placement on the board 
+- the ants current row placement
+- the number of iterations of the Langton's ant
+- dir, the ants current direction
+
+Rules
+- the grid will have no limit 
+- if the ant enters a white square (1), it will turn 90 degrees right, flip the color, and move forward one unit
+- if the ant enters a black square (0), it will turn 90 degrees left, flip the color, and move forward one unit
+- if the ant moves east or west into unknown territory, the current array is expanded by 1 - east appended, west prepended
+- if the ant moves north or south into unknown territory, a new array is created.
+- each time the ant moves into unknown therritory, the territory created will be a black square
+
+- White squares are represented by 1's 
+- Black squares are represented by 0's 
+
+Implicit requirements
+- The O position of the ant is the north-west corner of the grid
+
+How a turn works
+# if the number of iterations is 0, return the input grid 
+# get the color of the grid at the ants current position
+# change direction based on the color - save the new direction
+# find the color of the ants current position in the grid
+# flip the color of the current position in the grid - update the grid 
+# move one step in that direction - save the position 
+# Check the new position against the grid
+# if outside the grid, update the grid to include position
+# start new turn with with n - 1 iterations
+
+Examples
+ant([[1]], 0, 0, 1, 0)   # should return: [[0, 0]]
+- The ant starts at position [0, 0] which is the northwest corner. At this moment in time, there is only this grid position, and it is white (it has value 1)
+- The ant has position north but this changes to east according to the rules for black/yellow grid values
+- the grid then flips from [[1]] to [[0]] 
+- the ant then moves 1 position east [[0, 0]] so that its row is now 0 and its column is 1.
+- The grid is updated to contain the new position
+- The grid is then returned 
+
+ant([[1]], 0, 0, 3, 0) should return [[0, 1], [0, 1]]
+- The ant starts at position [0, 0], this grid position is white
+- The ant has position north but this changes to east according to the rules for black/yellow grid values
+- the grid then flips from [[1]] to [[0]] 
+- the ant then moves 1 position east [[0, 0]] so that its row is now 0 and its column is 1.
+- The grid is updated to contain the new position
+- The ant now starts at position [1, 0], this grid position is black
+- The grid flips from black to white i.e [0, 1] 
+- the ant has position east, but this changes to north according to the rules given
+- the ant then moves 1 position north,this place is black
+- since it is black it moves 90 degrees left, to west. it changes the grid from 0 to 1
+- since this was the last iteration, the grid is returned as [[0, 1], [0, 1]]
+
+Data structure
+Create an array to hold subarrays, each array is a row, elements are column values. 
+
+High Level Algorithm
+
+Move forward method 
+# Input: Ant direction, row and col position
+# Output: returns new row and col position 
+
+# Turn method
+# Input - direction and color 
+# output - direction 
+
+# Get color method
+# input: two integers (row and col) 
+# returns - an integer (0 or 1)
+
+# Flip color
+# input: position
+# return: grid with flipped position
+
+# Update grid
+# input: position
+# return: array of arrays 
+
+=end 
+
+def get_color(grid, col, row)
+    grid[row][col]
+end 
+
+def change_dir(color, dir) 
+    case color
+        when 0 then dir -= 1
+        when 1 then dir += 1
+    end
+    case 
+    when dir < 0 then dir = 3
+    when dir > 3 then dir = 0
+    end 
+    dir 
+end 
+
+def flip_color(grid, col, row)
+    flip = {1 => 0, 0 => 1}
+    grid[row][col] = flip[grid[row][col]]
+    grid 
+end 
+
+def move_forward(dir, col, row)
+    case dir
+    when 0 then row -= 1
+    when 1 then col += 1
+    when 2 then row += 1
+    when 3 then col -= 1 
+    end
+    return col, row 
+end 
+
+def update_grid(grid, col, row)
+    if row < 0 
+        new_row = Array.new(size = grid[0].size, default = 0)
+        grid.unshift(new_row)
+        row = 0 
+    elsif row >= grid.size 
+        new_row = Array.new(size = grid[0].size, default = 0)
+        grid.push(new_row)
+    elsif col < 0 
+        grid.each { |row| row.unshift(0) } 
+        col = 0
+    end 
+    grid.each { |sub_array| sub_array << 0 if col >= grid[row].size }
+    return grid, col, row 
+end 
+
+
+def ant(grid, col, row, n, dir = 0) 
+    return grid if n == 0
+    color = get_color(grid, col, row)
+    dir = change_dir(color, dir)
+    grid = flip_color(grid, col, row)
+    col, row = move_forward(dir, col, row)
+    grid, col, row = update_grid(grid, col, row) 
+    ant(grid, col, row, n - 1, dir)
+end 
+
+p ant([[1]], 0, 0, 1, 0)
+p ant([[0]], 0, 0, 1)
+p ant([[1]], 0, 0, 3, 0)

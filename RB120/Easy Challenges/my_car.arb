@@ -1,0 +1,90 @@
+module TowCapable 
+  def can_it_tow?(weight)
+    weight > 2000 ? true : false 
+  end
+end
+
+class Vehicle
+
+  @@number_of_vehicles = 0
+
+  attr_accessor :color
+  attr_reader :year, :model
+
+  def initialize(year, color, model)
+    @year = year
+    @color = color
+    @model = model 
+    @speed = 0
+    @@number_of_vehicles += 1
+  end 
+
+  def self.get_vehicles
+    @@number_of_vehicles
+  end
+
+  def how_many_vehicles
+    puts "#{Vehicle.get_vehicles} vehicle have been created" 
+  end
+
+  def speed_up(extra_speed)
+    self.speed += extra_speed
+  end
+
+  def brake(slow_by)
+    self.speed -= slow_by
+  end 
+
+  def shut_off()
+    self.speed = 0 
+  end 
+
+  def self.calculate_gas_mileage(kilometers, liters_of_fuel)
+    mileage = kilometers / liters_of_fuel
+    puts "  This car has #{mileage} mileage"
+  end 
+
+  def spray_paint(new_color) 
+    self.color = new_color
+  end
+
+  def print_age
+    puts "The #{model} is #{age(year)} years old"
+  end
+
+  private
+
+  def age(year)
+
+    Time.now.year - year 
+
+  end
+
+end 
+
+class Mytruck < Vehicle 
+  include TowCapable
+
+  attr_reader :num_wheels 
+
+  def initialize(year, color, model) 
+    super(year, color, model) 
+    @num_wheels = 8 
+  end
+
+end
+
+class MyCar < Vehicle 
+
+  def initialize(year, color, model) 
+    super
+    @num_wheels = 4 
+  end
+  
+  def to_s 
+    "This #{color} #{@model} car is from #{year}"
+  end 
+end 
+
+x = Mytruck.new(1994, "red", "Mustang")
+x.print_age

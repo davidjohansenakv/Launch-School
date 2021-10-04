@@ -1,0 +1,10 @@
+def common_chars arr
+    uniques = arr[0].chars.uniq
+    common_chars = []
+    uniques.each do |char|
+      count = []
+      arr.each  { |substring| count << substring.count(char) }
+      count.min.times { common_chars << char }
+    end
+    common_chars
+  end

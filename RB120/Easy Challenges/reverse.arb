@@ -1,0 +1,26 @@
+=begin
+take a string as an argument, return the string in reverse order without using the built-in reverse method.
+
+reverse_string("abcde") == "edcba"
+reverse_string(" ") == " "
+reverse_string("football") == "llabtoof"
+=end
+
+# you could get the size of the string - 1
+# get an array of the characters
+# add those characters to an array
+# join the characters up
+# and move down
+
+def reverse_string(str)
+    top_index = str.size - 1 
+    reverse_arr = []
+    top_index.downto(0) do |idx|
+        reverse_arr.push(str[idx])
+    end
+    reverse_arr.join 
+end
+
+p reverse_string("abcde") == "edcba"
+p reverse_string(" ") == " "
+p reverse_string("football") == "llabtoof"

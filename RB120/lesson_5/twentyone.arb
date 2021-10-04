@@ -1,9 +1,7 @@
-require 'pry'
-
 module DealerDisplays
   def display_dealer_total
     puts "With a total of #{@dealer.total}, Dealer hits ... "
-    sleep 1.5 
+    sleep 1.2
   end
 
   def display_dealer_turn
@@ -27,12 +25,12 @@ module PlayerDisplays
   def display_player_turn
     system 'cls'
     puts "It'll be your turn in a moment ..."
-    sleep 1.5
+    sleep 1.0
   end
 
   def display_player_busted
     puts 'You busted! Better luck next time'
-    sleep 2
+    sleep 1.6
   end
 end
 
@@ -44,14 +42,15 @@ class Card
     @value = value
   end
 
-  def to_s 
+  def to_s
     "#{value} of #{suit}"
   end
 end
 
 class Deck
-  CARD_VALUES = %I[two three four five six seven eight nine ten jack queen king ace]
-  CARD_SUITS = %I[spades clubs diamonds hearts]
+  CARD_VALUES = %I(two three four five six seven eight nine ten jack queen king
+                   ace)
+  CARD_SUITS = %I(spades clubs diamonds hearts)
   def initialize
     @deck = []
     CARD_SUITS.each do |suit|
@@ -62,7 +61,6 @@ class Deck
   end
 
   def deal
-    # choose a random card from the deck and remove it, returning it
     @deck.delete(@deck.sample)
   end
 end
@@ -77,8 +75,9 @@ module GameMoves
   end
 
   def update_total(card)
-    # The players total is fairly complex
-    # Each card has a value - either the number associated with it, a set value, or in the case of aces, either 11 or one
+    # A total is fairly complex
+    # Each card has a value - either the number associated with it, a set value,
+    # or in the case of aces, either 11 or one
     interim_total = @total
     mapped_value = Player::CARD_SYMBOLS_TO_VALUES[card.value]
     interim_total += case card.value
@@ -95,7 +94,21 @@ class Participant
   attr_reader :busted, :total
   attr_accessor :cards
 
-  CARD_SYMBOLS_TO_VALUES = {two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, jack: 10, queen: 10, king: 10, ace: [1, 11] }
+  CARD_SYMBOLS_TO_VALUES = {
+    two: 2,
+    three: 3,
+    four: 4,
+    five: 5,
+    six: 6,
+    seven: 7,
+    eight: 8,
+    nine: 9,
+    ten: 10,
+    jack: 10,
+    queen: 10,
+    king: 10,
+    ace: [1, 11]
+  }
 
   def initialize
     @total = 0
@@ -113,7 +126,7 @@ class Participant
     @cards.each do |card|
       puts card
     end
-    sleep 2
+    sleep 1.2
   end
 end
 
@@ -129,6 +142,27 @@ class Player < Participant
     puts 'Hit a key to continue'
     gets.chomp
   end
+
+  def make_choice(deck)
+    choice = hit_or_stay_prompt_loop
+    case choice
+    when 'stay' then 'stay'
+    when 'hit' then hit(deck)
+    when 'display' then display_total
+    end
+  end
+
+  def hit_or_stay_prompt_loop
+    choice = nil
+    loop do
+      puts 'You can (hit), (stay) or (display) the value of your current hand: '
+      choice = gets.chomp.downcase
+      break if %w(stay hit display).include? choice
+
+      puts "You didn't make one of the valid choices, try again"
+    end
+    choice
+  end
 end
 
 class Dealer < Participant
@@ -141,6 +175,24 @@ class Dealer < Participant
   def to_s
     self.class.name
   end
+
+  def deal_cards(player, deck)
+    2.times do
+      current_card = deck.deal
+      player.cards << current_card
+      player.update_total(current_card)
+
+      current_card = deck.deal
+      @cards << current_card
+      update_total(current_card)
+    end
+  end
+
+  def reset_deck_and_hands(player, deck)
+    deck = Deck.new
+    player.cards = []
+    self.cards = []
+  end
 end
 
 class Game
@@ -150,18 +202,13 @@ class Game
   def initialize
     @player = Player.new
     @dealer = Dealer.new
-  end
-
-  def reset_deck_and_hands
     @deck = Deck.new
-    @player = Player.new
-    @dealer = Dealer.new
   end
 
   def display_welcome
     system 'cls'
-    puts 'Welcome to en-og-tyve - this is a game where you must out-smart and out-luck the dealer.'
-    sleep 3
+    puts 'Welcome to 21 !'
+    sleep 1.6
   end
 
   def display_goodbye
@@ -170,53 +217,21 @@ class Game
     puts "Thank's for playing!!"
   end
 
-  def deal_cards
-    2.times do
-      current_card = @deck.deal
-      @player.cards << current_card
-      @player.update_total(current_card)
-
-      current_card = @deck.deal
-      @dealer.cards << current_card
-      @dealer.update_total(current_card)
-    end
-  end
-
-  def show_initial_cards
-    @player.show_cards
-  end
-
-  def hit_or_stay_prompt_loop
-    choice = nil
-    loop do
-      puts 'You can (hit), (stay) or (display) the total value of your current hand. Make a choice: '
-      choice = gets.chomp.downcase
-      break if %w[stay hit display].include? choice
-
-      puts "You didn't make one of the valid choices, try again"
-    end
-    choice
-  end
-
   def player_turn_loop
     loop do
       if @player.busted
         display_player_busted
         break
       end
-      choice = hit_or_stay_prompt_loop
-      case choice
-      when 'stay' then break
-      when 'hit' then @player.hit(@deck)
-      when 'display' then @player.display_total
-      end
+      player_action = @player.make_choice(@deck)
+      break if player_action == 'stay'
       @player.show_cards
     end
   end
 
   def player_turn
     display_player_turn
-    show_initial_cards
+    @player.show_cards
     player_turn_loop
   end
 
@@ -238,29 +253,37 @@ class Game
     end
   end
 
-  # returns an array where the first index is the winner of the game and the second index holds the loser
+  # returns an array where the first index is the winner of the game
+  # and the second index holds the loser
   def result
-    @player.total > @dealer.total && @player.total < 21 ? [@player, @dealer] : [@dealer,@player]
-  end 
+    if @player.total > @dealer.total && @player.total < 21
+      [@player,
+       @dealer]
+    else
+      [@dealer,
+       @player]
+    end
+  end
 
   def show_result
     system 'cls'
     @player.show_cards(clear_screen: false)
     puts
     @dealer.show_cards(clear_screen: false)
-    sleep 2
+    sleep 1.5 
     results = result
-    puts "The winner is #{results.first} with a total of #{results.first.total} "\
-    "versus #{results.last} with a total of #{results.last.total}"
+    puts "The winner is #{results.first} with a total of"\
+    " #{results.first.total}"\
+    " versus #{results.last} with a total of #{results.last.total}"
   end
 
   def play_again?
     puts 'Would you like to play again? (y/n) :)'
     ans = nil
-    loop do 
+    loop do
       choice = gets.chomp
       ans = choice
-      break if %w[y n].include? choice
+      break if %w(y n).include? choice
 
       puts 'You must choose one of the provided options'
     end
@@ -270,8 +293,8 @@ class Game
   def start
     display_welcome
     loop do
-      reset_deck_and_hands
-      deal_cards
+      @dealer.reset_deck_and_hands(@player, @deck)
+      @dealer.deal_cards(@player, @deck)
       player_turn
       dealer_turn unless @player.busted
       show_result

@@ -1,0 +1,171 @@
+=begin
+
+# Input: 2d grid (Array of arrays) 
+# Return: An array of "moves" (String elements) 
+
+Rules
+'F' means move one step forward
+'L' means turn left (90 degrees)
+'R' means turn right (90 degrees)
+'B' means turn back (180 degrees) 
+' ' is walkable space
+'#' is a thorn bush (impassable)
+'^', '<', 'v' or '>' îs the initial direction of unit that must flee the maze. 
+You 'escape' if you reach the edge of the grid 
+
+Explicit requirements
+- Must return a list of minimum required moves to escape
+- If the maze has no exit, return an empty array
+- The grid will always be rectangular
+
+Implicit requirements
+- 'B' (Turn back) means turn 180 degrees. 
+- You are placed randomly in the grid 
+- Victory condition is if you reach either the first row i.e row[0] or the last row ie row[-1], or if in a given row you reach col[0] or col[-1] 
+- Your starting position is where one of the ^ < v or > symbols are located in the grid, i.e the row and col index, and is necessary to check surroundings
+- You have a position and a direction 
+- If you go up a blind end, you should backtrack and delete moves from an array 
+
+Examples
+ [
+  '####### #',
+  '#>#   # #',
+  '#   #   #',
+  '#########'
+ ] 
+
+Data structure
+Use simple integers for positions and directions 
+Use an array with a nested hash for possible paths ? 
+
+High Level Algorithm
+
+- Find start position and start direction 
+
+- Move out of the maze 
+-- If there's a divergent path, save the possible paths (positions) and direction choices, and save the current index of the moves array (backtrack point) 
+-- Choose randomly from one of the paths, make sure you can't make that choice again
+--- if there's a dead end, backtrack and make another choice
+    -- backtracking involves also deleting choices from array from index position moves array 
+    -- If no more choices are available, the maze cannot be escaped
+
+- iteratively do
+    - check surroundings for free space 
+    - update rotation and save to array
+    - move and save to array
+    - check victory conditions
+
+function for finding start position and direction 
+Input: 2-d grid (array of arrays) 
+Return: a row, a column, and a direction symbol
+
+function to translate start direction into a number 
+
+function for checking victory conditions
+function for checking dead ends
+function for moving back to backtrack points 
+function for checking possible moves 
+-- a possible move cannot be opposite to the direction you are facing unless it's the first move 
+function for saving backtrack points
+function to change direction if necessary and save to array 
+function to move and save to array 
+
+Pseudo-Code 
+
+=end
+
+# returns player position and direction 
+def find_player maze
+    player = {} 
+    
+    player[pos] = [row, col]
+    player[dir] = 
+end 
+
+def find_exit maze
+
+    [row, col]
+end 
+
+# changes direction symbols to more manageable integers system 
+def translate_direction(dir)
+
+end
+
+## find_optimal_choice takes an array specifying current position in a 2d grid, the number of available spaces to move into, and the exit position of the maze
+# and returns the move that is the shortest possible distance to the exit 
+def find_optimal_choice(pos, choices, maze_exit)
+
+end 
+
+def got_out?(pos, maze_exit)
+    pos == maze_exit
+end 
+
+# turn updates the direction of the player
+# by taking the current position and direction, and the position to be gained after the move
+def turn(pos, dir,  choice) 
+    dir 
+end
+
+# add_move mutates the array_of_moves array by adding either a direction change or position update 
+def add_move moves move
+    moves << move 
+end 
+
+# rolls back all mutations to array_of_moves to latest backtrack points
+def backtrack(backtrack_points, array_of_moves)
+
+end 
+
+def exhausted_choices?(choices)
+    choices.is_empty? 
+end
+
+# main game loop 
+def escape maze 
+    array_of_moves = []
+    backtrack_points = [] 
+
+    player = find_player(maze)
+    player = translate_direction(player[dir])
+    maze_exit = find_exit(maze) 
+    choices = [] 
+
+    return [] if nil == maze_exit 
+
+    loop do 
+        choice = [] 
+
+        loop do 
+            return array_of_moves if got_out? 
+            
+            if deadend? 
+                return [] if no_backtrack_points?(backtrack_points)
+                backtrack(backtrack_points, array_of_moves)
+                choices = backtrack_points[-1] 
+            else 
+                choices = get_paths(pos, maze)
+                if backtrack_point?(choices)
+                    backtrack_points << choices 
+                    choices = backtrack_points[-1]               
+                else
+                    choice = choices[0]
+                    break 
+                end 
+            end
+
+            choice = find_optimal_choice(player[pos], choices, maze_exit)
+            remove_choice(choice, choices) 
+            backtrack_points.delete_at(-1) if exhausted_choices?(choices) # check that delete_at works like this 
+        end
+        # change dir
+        # update array_of_moves
+        # move
+        # update_array of moves 
+    end
+end 
+
+
+
+##### Method Testing ##### 

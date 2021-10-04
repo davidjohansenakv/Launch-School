@@ -1,0 +1,44 @@
+
+class Mammal 
+    def speak
+        'growl'
+    end
+
+    def swim
+        'swimming'
+    end
+
+    def run 
+        'running'
+    end
+
+    def jump
+        'jumping'
+    end
+end
+
+class Dog < Mammal 
+    def speak
+        'bark'
+    end
+
+    def fetch
+        'fetching'
+    end
+end
+
+
+class Cat < Mammal
+    def speak
+        'miaow'
+    end
+end
+
+class Bulldog < Dog
+    def swim
+        "can't swim!" 
+    end
+end
+
+jason = Bulldog.new 
+p Bulldog.ancestors

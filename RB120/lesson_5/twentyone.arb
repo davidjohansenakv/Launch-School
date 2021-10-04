@@ -1,0 +1,284 @@
+require 'pry'
+
+module DealerDisplays
+  def display_dealer_total
+    puts "With a total of #{@dealer.total}, Dealer hits ... "
+    sleep 1.5 
+  end
+
+  def display_dealer_turn
+    system 'cls'
+    puts "It's now the dealers turn ..."
+    sleep 1
+  end
+
+  def display_dealer_busted
+    puts 'Dealer busted! Lucky you'
+    sleep 1
+  end
+
+  def display_dealer_stays
+    puts 'Dealer decides to stay with his hand'
+    sleep 1
+  end
+end
+
+module PlayerDisplays
+  def display_player_turn
+    system 'cls'
+    puts "It'll be your turn in a moment ..."
+    sleep 1.5
+  end
+
+  def display_player_busted
+    puts 'You busted! Better luck next time'
+    sleep 2
+  end
+end
+
+class Card
+  attr_reader :suit, :value
+
+  def initialize(suit, value)
+    @suit = suit
+    @value = value
+  end
+
+  def to_s 
+    "#{value} of #{suit}"
+  end
+end
+
+class Deck
+  CARD_VALUES = %I[two three four five six seven eight nine ten jack queen king ace]
+  CARD_SUITS = %I[spades clubs diamonds hearts]
+  def initialize
+    @deck = []
+    CARD_SUITS.each do |suit|
+      CARD_VALUES.each do |value|
+        @deck << Card.new(suit, value)
+      end
+    end
+  end
+
+  def deal
+    # choose a random card from the deck and remove it, returning it
+    @deck.delete(@deck.sample)
+  end
+end
+
+module GameMoves
+  # hit deals new cards, but should also update a total and a busted condition
+  def hit(deck)
+    card = deck.deal
+    update_total(card)
+    @cards << card
+    @busted = @total > 21
+  end
+
+  def update_total(card)
+    # The players total is fairly complex
+    # Each card has a value - either the number associated with it, a set value, or in the case of aces, either 11 or one
+    interim_total = @total
+    mapped_value = Player::CARD_SYMBOLS_TO_VALUES[card.value]
+    interim_total += case card.value
+                     when :ace
+                       (interim_total + mapped_value.last) > 21 ? mapped_value.first : mapped_value.last
+                     else
+                       mapped_value
+                     end
+    @total = interim_total
+  end
+end
+
+class Participant
+  attr_reader :busted, :total
+  attr_accessor :cards
+
+  CARD_SYMBOLS_TO_VALUES = {two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, jack: 10, queen: 10, king: 10, ace: [1, 11] }
+
+  def initialize
+    @total = 0
+    @busted = false
+    @cards = []
+  end
+
+  def busted?
+    @busted = @total > 21
+  end
+
+  def show_cards(clear_screen: true)
+    system 'cls' if clear_screen
+    puts "#{self} cards are: "
+    @cards.each do |card|
+      puts card
+    end
+    sleep 2
+  end
+end
+
+class Player < Participant
+  include GameMoves
+
+  def to_s
+    self.class.name
+  end
+
+  def display_total
+    puts "Your total so far is: #{@total}"
+    puts 'Hit a key to continue'
+    gets.chomp
+  end
+end
+
+class Dealer < Participant
+  include GameMoves
+
+  def stay?
+    @total >= 17
+  end
+
+  def to_s
+    self.class.name
+  end
+end
+
+class Game
+  include DealerDisplays
+  include PlayerDisplays
+
+  def initialize
+    @player = Player.new
+    @dealer = Dealer.new
+  end
+
+  def reset_deck_and_hands
+    @deck = Deck.new
+    @player = Player.new
+    @dealer = Dealer.new
+  end
+
+  def display_welcome
+    system 'cls'
+    puts 'Welcome to en-og-tyve - this is a game where you must out-smart and out-luck the dealer.'
+    sleep 3
+  end
+
+  def display_goodbye
+    sleep 1
+    puts
+    puts "Thank's for playing!!"
+  end
+
+  def deal_cards
+    2.times do
+      current_card = @deck.deal
+      @player.cards << current_card
+      @player.update_total(current_card)
+
+      current_card = @deck.deal
+      @dealer.cards << current_card
+      @dealer.update_total(current_card)
+    end
+  end
+
+  def show_initial_cards
+    @player.show_cards
+  end
+
+  def hit_or_stay_prompt_loop
+    choice = nil
+    loop do
+      puts 'You can (hit), (stay) or (display) the total value of your current hand. Make a choice: '
+      choice = gets.chomp.downcase
+      break if %w[stay hit display].include? choice
+
+      puts "You didn't make one of the valid choices, try again"
+    end
+    choice
+  end
+
+  def player_turn_loop
+    loop do
+      if @player.busted
+        display_player_busted
+        break
+      end
+      choice = hit_or_stay_prompt_loop
+      case choice
+      when 'stay' then break
+      when 'hit' then @player.hit(@deck)
+      when 'display' then @player.display_total
+      end
+      @player.show_cards
+    end
+  end
+
+  def player_turn
+    display_player_turn
+    show_initial_cards
+    player_turn_loop
+  end
+
+  def dealer_turn
+    display_dealer_turn
+    @dealer.show_cards
+    loop do
+      if @dealer.busted
+        display_dealer_busted
+        break
+      elsif @dealer.stay?
+        display_dealer_stays
+        break
+      end
+
+      display_dealer_total
+      @dealer.hit(@deck)
+      @dealer.show_cards
+    end
+  end
+
+  # returns an array where the first index is the winner of the game and the second index holds the loser
+  def result
+    @player.total > @dealer.total && @player.total < 21 ? [@player, @dealer] : [@dealer,@player]
+  end 
+
+  def show_result
+    system 'cls'
+    @player.show_cards(clear_screen: false)
+    puts
+    @dealer.show_cards(clear_screen: false)
+    sleep 2
+    results = result
+    puts "The winner is #{results.first} with a total of #{results.first.total} "\
+    "versus #{results.last} with a total of #{results.last.total}"
+  end
+
+  def play_again?
+    puts 'Would you like to play again? (y/n) :)'
+    ans = nil
+    loop do 
+      choice = gets.chomp
+      ans = choice
+      break if %w[y n].include? choice
+
+      puts 'You must choose one of the provided options'
+    end
+    ans == 'y'
+  end
+
+  def start
+    display_welcome
+    loop do
+      reset_deck_and_hands
+      deal_cards
+      player_turn
+      dealer_turn unless @player.busted
+      show_result
+      break unless play_again?
+    end
+    display_goodbye
+  end
+end
+
+Game.new.start

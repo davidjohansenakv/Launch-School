@@ -48,8 +48,7 @@ class Card
 end
 
 class Deck
-  CARD_VALUES = %I(two three four five six seven eight nine ten jack queen king
-                   ace)
+  CARD_VALUES = %I(two three four five six seven eight nine ten jack queen king ace)
   CARD_SUITS = %I(spades clubs diamonds hearts)
   def initialize
     @deck = []

@@ -187,12 +187,6 @@ class Dealer < Participant
       update_total(current_card)
     end
   end
-
-  def reset_deck_and_hands(player, deck)
-    deck = Deck.new
-    player.cards = []
-    self.cards = []
-  end
 end
 
 class Game
@@ -203,6 +197,12 @@ class Game
     @player = Player.new
     @dealer = Dealer.new
     @deck = Deck.new
+  end
+
+  def reset_game
+    @deck = Deck.new
+    @player = Player.new
+    @dealer = Dealer.new
   end
 
   def display_welcome
@@ -238,6 +238,10 @@ class Game
   def dealer_turn
     display_dealer_turn
     @dealer.show_cards
+    dealer_turn_loop
+  end
+
+  def dealer_turn_loop 
     loop do
       if @dealer.busted
         display_dealer_busted
@@ -246,7 +250,6 @@ class Game
         display_dealer_stays
         break
       end
-
       display_dealer_total
       @dealer.hit(@deck)
       @dealer.show_cards
@@ -256,7 +259,7 @@ class Game
   # returns an array where the first index is the winner of the game
   # and the second index holds the loser
   def result
-    if @player.total > @dealer.total && @player.total < 21
+    if @dealer.busted || (@player.total > @dealer.total && !@player.busted)
       [@player,
        @dealer]
     else
@@ -270,7 +273,7 @@ class Game
     @player.show_cards(clear_screen: false)
     puts
     @dealer.show_cards(clear_screen: false)
-    sleep 1.5 
+    sleep 1.5
     results = result
     puts "The winner is #{results.first} with a total of"\
     " #{results.first.total}"\
@@ -293,7 +296,7 @@ class Game
   def start
     display_welcome
     loop do
-      @dealer.reset_deck_and_hands(@player, @deck)
+      reset_game
       @dealer.deal_cards(@player, @deck)
       player_turn
       dealer_turn unless @player.busted
